@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>User Panel</title>
+  <style>
+    body{font-family:Arial;background:#111;color:#fff;margin:0;padding:0}
+    header{background:#222;padding:10px;display:flex;justify-content:space-between}
+    .made{font-size:12px;color:#aaa}
+    .box{max-width:500px;margin:15px auto;background:#222;padding:15px;border-radius:8px}
+    input,select,button{width:100%;padding:10px;margin:6px 0;border-radius:5px;border:none}
+    button{background:#00b894;color:white;font-weight:bold;cursor:pointer}
+    .number{border-bottom:1px solid #444;padding:8px 0}
+    .small{font-size:12px;color:#aaa}
+  </style>
+</head>
+<body>
+
+<header>
+  <div><b>Jens</b></div>
+  <div class="made">Made by Jens / Contact: @Jens449</div>
+</header>
+
+<div class="box" id="loginBox">
+  <h3>User Login / Register</h3>
+  <input id="username" placeholder="Your Name">
+  <input id="password" placeholder="Your Password">
+  <button onclick="login()">Login</button>
+  <p id="msg"></p>
+</div>
+
+<div class="box" id="userBox" style="display:none;">
+  <h3>Add Number</h3>
+  <input id="number" placeholder="Enter number (+966...)">
+  
+  <select id="source">
+    <option value="">Select source</option>
+    <option>Tiktok</option>
+    <option>Instagram</option>
+    <option>Facebook</option>
+    <option>WhatsApp</option>
+    <option>Telegram</option>
+    <option>Other</option>
+  </select>
+
+  <select id="country">
+    <option value="">Select country</option>
+    <option>Saudi</option>
+    <option>India</option>
+    <option>UK</option>
+    <option>USA</option>
+    <option>UAE</option>
+    <option>Other</option>
+  </select>
+
+  <button onclick="addNumber()">Add Number</button>
+</div>
+
+<div class="box">
+  <h3>Live Numbers (Masked)</h3>
+  <div id="list"></div>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+let currentUser="";
+
+function getUsers(){
+  return JSON.parse(localStorage.getItem("users")||"[]");
+}
+function saveUsers(d){
+  localStorage.setItem("users",JSON.stringify(d));
+}
+function getNumbers(){
+  return JSON.parse(localStorage.getItem("numbers")||"[]");
+}
+function saveNumbers(d){
+  localStorage.setItem("numbers",JSON.stringify(d));
+}
+
+function login(){
+  let u=username.value.trim();
+  let p=password.value.trim();
+
+  if(!u||!p){msg.innerText="Fill all";return;}
+
+  let users=getUsers();
+  let found=users.find(x=>x.user===u);
+
+  if(!found){
+    users.push({user:u,pass:p});
+    saveUsers(users);
+  }else{
+    if(found.pass!==p){
+      msg.innerText="Wrong Password";
+      return;
+    }
+  }
+
+  currentUser=u;
+  loginBox.style.display="none";
+  userBox.style.display="block";
+  load();
+}
+
+function mask(num){
+  if(num.length<6) return num;
+  return num.substring(0,3)+"******"+num.slice(-3);
+}
+
+function addNumber(){
+  let num=number.value.trim();
+  let src=source.value;
+  let ctry=country.value;
+
+  if(!num||!src||!ctry){
+    alert("All fields required");
+    return;
+  }
+
+  let data=getNumbers();
+  if(data.find(x=>x.number===num)){
+    alert("Already added");
+    return;
+  }
+
+  data.push({
+    number:num,
+    user:currentUser,
+    source:src,
+    country:ctry,
+    time:new Date().toLocaleString()
+  });
+
+  saveNumbers(data);
+  number.value="";
+  load();
+}
+
+function load(){
+  let data=getNumbers().reverse();
+  list.innerHTML="";
+  data.forEach(d=>{
+    list.innerHTML+=`
+    <div class="number">
+      <b>${mask(d.number)}</b><br>
+      <span class="small">${d.user} | ${d.source} | ${d.country}</span><br>
+      <span class="small">${d.time}</span>
+    </div>`;
+  })
+}
+
+function logout(){
+  location.reload();
+}
+
+setInterval(load,2000);
+</script>
+
+</body>
+</html>

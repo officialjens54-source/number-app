@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:20px}
+.box{background:#222;padding:15px;border-radius:8px;max-width:700px;margin:auto}
+input,button{padding:10px;margin:5px 0;width:100%}
+.number{border-bottom:1px solid #555;padding:6px 0}
+</style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+<h2>Admin Login</h2>
+<input id="name" placeholder="Admin Name">
+<input id="pass" placeholder="Admin Password">
+<button onclick="login()">Login</button>
+<p id="msg"></p>
+</div>
+
+<div class="box" id="panel" style="display:none;">
+<h2>Welcome Admin (Jens)</h2>
+
+<h3>User Stats</h3>
+<div id="userStats"></div>
+
+<h3>All Numbers (Full View)</h3>
+<div id="allNumbers"></div>
+
+<button onclick="logout()">Logout</button>
+</div>
+
+<script>
+function getNumbers(){
+  return JSON.parse(localStorage.getItem("numbers")||"[]");
+}
+
+function login(){
+  if(name.value=="Jens" && pass.value=="561236"){
+    loginBox.style.display="none";
+    panel.style.display="block";
+    loadData();
+  }else{
+    msg.innerText="Wrong credentials";
+  }
+}
+
+function logout(){
+  location.reload();
+}
+
+function loadData(){
+  let data=getNumbers();
+
+  let users={};
+  data.forEach(n=>{
+    if(!users[n.user]) users[n.user]=0;
+    users[n.user]++;
+  });
+
+  userStats.innerHTML="";
+  for(let u in users){
+    userStats.innerHTML+=`<div>${u} : ${users[u]} numbers</div>`;
+  }
+
+  allNumbers.innerHTML="";
+  data.forEach(d=>{
+    allNumbers.innerHTML+=`
+    <div class="number">
+      <b>${d.number}</b> | ${d.user} | ${d.country} | ${d.source} <br>
+      <small>${d.time}</small>
+    </div>`;
+  })
+}
+</script>
+
+</body>
+</html>
