@@ -1,161 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>User Panel</title>
-  <style>
-    body{font-family:Arial;background:#111;color:#fff;margin:0;padding:0}
-    header{background:#222;padding:10px;display:flex;justify-content:space-between}
-    .made{font-size:12px;color:#aaa}
-    .box{max-width:500px;margin:15px auto;background:#222;padding:15px;border-radius:8px}
-    input,select,button{width:100%;padding:10px;margin:6px 0;border-radius:5px;border:none}
-    button{background:#00b894;color:white;font-weight:bold;cursor:pointer}
-    .number{border-bottom:1px solid #444;padding:8px 0}
-    .small{font-size:12px;color:#aaa}
-  </style>
+<meta charset="UTF-8">
+<title>Jens Number System</title>
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:20px}
+.box{max-width:500px;margin:auto;background:#222;padding:20px;border-radius:10px}
+input,select,button{width:100%;padding:10px;margin:5px 0}
+.number{border-bottom:1px solid #555;padding:10px 0}
+.top{display:flex;justify-content:space-between;align-items:center}
+small{opacity:0.6}
+</style>
 </head>
 <body>
 
-<header>
-  <div><b>Jens</b></div>
-  <div class="made">Made by Jens / Contact: @Jens449</div>
-</header>
-
-<div class="box" id="loginBox">
-  <h3>User Login / Register</h3>
-  <input id="username" placeholder="Your Name">
-  <input id="password" placeholder="Your Password">
-  <button onclick="login()">Login</button>
-  <p id="msg"></p>
+<div class="top">
+  <b>Jens</b>
+  <small>Made by Jens / Contact: @Jens449</small>
 </div>
 
-<div class="box" id="userBox" style="display:none;">
-  <h3>Add Number</h3>
-  <input id="number" placeholder="Enter number (+966...)">
-  
+<div class="box" id="loginBox">
+  <h2>User Login</h2>
+  <input id="username" placeholder="Enter name">
+  <input id="password" placeholder="Enter password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div class="box" id="panel" style="display:none">
+  <h2>Welcome <span id="userLabel"></span></h2>
+
+  <input id="number" placeholder="Enter number">
   <select id="source">
     <option value="">Select source</option>
     <option>Tiktok</option>
-    <option>Instagram</option>
     <option>Facebook</option>
+    <option>Instagram</option>
     <option>WhatsApp</option>
-    <option>Telegram</option>
-    <option>Other</option>
-  </select>
-
-  <select id="country">
-    <option value="">Select country</option>
-    <option>Saudi</option>
-    <option>India</option>
-    <option>UK</option>
-    <option>USA</option>
-    <option>UAE</option>
     <option>Other</option>
   </select>
 
   <button onclick="addNumber()">Add Number</button>
-</div>
+  <p id="msg"></p>
 
-<div class="box">
   <h3>Live Numbers (Masked)</h3>
   <div id="list"></div>
+
   <button onclick="logout()">Logout</button>
 </div>
 
 <script>
-let currentUser="";
+let user = null;
 
-function getUsers(){
-  return JSON.parse(localStorage.getItem("users")||"[]");
+function mask(num){
+  if(num.length<5) return num;
+  return num.slice(0,3) + "*****" + num.slice(-3);
 }
-function saveUsers(d){
-  localStorage.setItem("users",JSON.stringify(d));
-}
-function getNumbers(){
+
+function getData(){
   return JSON.parse(localStorage.getItem("numbers")||"[]");
 }
-function saveNumbers(d){
+
+function saveData(d){
   localStorage.setItem("numbers",JSON.stringify(d));
 }
 
 function login(){
-  let u=username.value.trim();
-  let p=password.value.trim();
+  let u = username.value.trim();
+  let p = password.value.trim();
+  if(!u || !p){ alert("Enter both"); return; }
 
-  if(!u||!p){msg.innerText="Fill all";return;}
+  let saved = JSON.parse(localStorage.getItem("accounts")||"{}");
 
-  let users=getUsers();
-  let found=users.find(x=>x.user===u);
-
-  if(!found){
-    users.push({user:u,pass:p});
-    saveUsers(users);
-  }else{
-    if(found.pass!==p){
-      msg.innerText="Wrong Password";
-      return;
-    }
+  if(saved[u] && saved[u]!==p){
+    alert("Username already taken"); return;
   }
 
-  currentUser=u;
-  loginBox.style.display="none";
-  userBox.style.display="block";
-  load();
-}
+  if(!saved[u]){
+    saved[u]=p;
+    localStorage.setItem("accounts",JSON.stringify(saved));
+  }
 
-function mask(num){
-  if(num.length<6) return num;
-  return num.substring(0,3)+"******"+num.slice(-3);
+  user=u;
+  loginBox.style.display="none";
+  panel.style.display="block";
+  userLabel.innerText = user;
+  render();
 }
 
 function addNumber(){
-  let num=number.value.trim();
-  let src=source.value;
-  let ctry=country.value;
+  let num = number.value.trim();
+  let src = source.value;
 
-  if(!num||!src||!ctry){
-    alert("All fields required");
+  if(!num || !src){
+    msg.innerText="Number and Source required!";
     return;
   }
 
-  let data=getNumbers();
-  if(data.find(x=>x.number===num)){
-    alert("Already added");
+  let data = getData();
+
+  if(data.find(d=>d.number===num)){
+    msg.innerText="Already added by someone!";
     return;
   }
 
-  data.push({
+  data.unshift({
     number:num,
-    user:currentUser,
+    user:user,
     source:src,
-    country:ctry,
     time:new Date().toLocaleString()
   });
 
-  saveNumbers(data);
+  saveData(data);
   number.value="";
-  load();
+  source.value="";
+  msg.innerText="✅ Added Successfully!";
+  render();
 }
 
-function load(){
-  let data=getNumbers().reverse();
-  list.innerHTML="";
-  data.forEach(d=>{
-    list.innerHTML+=`
+function render(){
+  let data = getData();
+
+  list.innerHTML = data.map(d=>`
     <div class="number">
       <b>${mask(d.number)}</b><br>
-      <span class="small">${d.user} | ${d.source} | ${d.country}</span><br>
-      <span class="small">${d.time}</span>
-    </div>`;
-  })
+      ${d.user} | ${d.source}<br>
+      <small>${d.time}</small>
+    </div>
+  `).join("");
 }
 
 function logout(){
   location.reload();
 }
 
-setInterval(load,2000);
+setInterval(render,2000);
 </script>
-
 </body>
 </html>
