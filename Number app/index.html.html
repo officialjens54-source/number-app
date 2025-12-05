@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>**** ****** System</title>
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:20px}
+.box{max-width:500px;margin:auto;background:#222;padding:20px;border-radius:10px}
+input,select,button{width:100%;padding:10px;margin:5px 0}
+.number{border-bottom:1px solid #555;padding:10px 0}
+.top{display:flex;justify-content:space-between;align-items:center}
+small{opacity:0.6}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <b>Jens</b>
+  <small>Made by Jens / Contact: @Jens449</small>
+</div>
+
+<div class="box" id="loginBox">
+  <h2>**** Login</h2>
+  <input id="username" placeholder="Enter name">
+  <input id="password" type="password" placeholder="Enter password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div class="box" id="panel" style="display:none">
+  <h2>******* <span id="userLabel"></span></h2>
+
+  <input id="number" placeholder="Enter number">
+  <select id="source">
+    <option value="">Select source</option>
+    <option>Tiktok</option>
+    <option>Facebook</option>
+    <option>Instagram</option>
+    <option>WhatsApp</option>
+    <option>Other</option>
+  </select>
+
+  <button onclick="addNumber()">*** Number</button>
+  <p id="msg"></p>
+
+  <h3>**** Numbers (Masked)</h3>
+  <div id="list"></div>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+let user = null;
+
+function mask(num){
+  if(num.length<5) return num;
+  return num.slice(0,3)+"*******"+num.slice(-3);
+}
+
+function getData(){
+  return JSON.parse(localStorage.getItem("numbers")||"[]");
+}
+
+function saveData(d){
+  localStorage.setItem("numbers",JSON.stringify(d));
+}
+
+function login(){
+  let u = username.value.trim();
+  let p = password.value.trim();
+  if(!u || !p){ alert("Enter both"); return; }
+
+  let acc = JSON.parse(localStorage.getItem("accounts")||"{}");
+
+  if(acc[u] && acc[u]!==p){
+    alert("Username already taken"); return;
+  }
+
+  if(!acc[u]){
+    acc[u] = p;
+    localStorage.setItem("accounts", JSON.stringify(acc));
+  }
+
+  user=u;
+  loginBox.style.display="none";
+  panel.style.display="block";
+  userLabel.innerText = user;
+  render();
+}
+
+function addNumber(){
+  let num = number.value.trim();
+  let src = source.value;
+
+  if(!num || !src){
+    msg.innerText="Number and Source required!";
+    return;
+  }
+
+  let data = getData();
+
+  if(data.find(d=>d.number===num)){
+    msg.innerText="Already added by someone!";
+    return;
+  }
+
+  data.unshift({
+    number:num,
+    user:user,
+    source:src,
+    time:new Date().toLocaleString()
+  });
+
+  saveData(data);
+  number.value="";
+  source.value="";
+  msg.innerText="✅ Added Successfully!";
+  render();
+}
+
+function render(){
+  let data=getData();
+  list.innerHTML=data.map(d=>`
+    <div class="number">
+    <b>${mask(d.number)}</b><br>
+    ${d.user} | ${d.source}<br>
+    <small>${d.time}</small>
+    </div>
+  `).join("");
+}
+
+function logout(){ location.reload(); }
+
+setInterval(render,2000);
+</script>
+
+<div style="color: red">Word to HTML trial - please <a href="https://wordtohtml.net/site/payment">Go PRO</a> to get whole HTML.</div>
+</body>
+</html>
